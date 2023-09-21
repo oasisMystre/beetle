@@ -1,0 +1,8 @@
+/courses
+/grammar
+.vscode 
+__pycache__
+.beetle.json
+migration.json
+schema.json 
+test.py 

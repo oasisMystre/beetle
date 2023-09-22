@@ -1,5 +1,6 @@
 /courses
 /grammar
+/actions
 .vscode 
 __pycache__
 .beetle.json

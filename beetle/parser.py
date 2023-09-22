@@ -23,7 +23,9 @@ SOFTWARE.
 """
 
 from pathlib import Path
-from typing import List, Optional, Union, Tuple
+from typing import List, Union, Tuple
+
+from .utils import is_iterable
 
 
 class Parser:
@@ -37,23 +39,20 @@ class Parser:
     def parse(
         self,
         directories: List[Union[Path, Tuple[Path, List[Path]]]],
-        root: Optional[dict] | Optional[List] = None,
     ):
         """
         Recursively parses directories and generates a hierarchical representation.
         """
-
-        if root is None:
-            root = []
+        root = []
 
         for directory in directories:
-            if isinstance(directory, tuple):
+            if is_iterable(directory):
                 parent, children = directory
             else:
                 parent, children = directory, []
 
             node = {
-                "id": parent.lstat().st_ino,
+                "id": parent.lstat().st_ino, #todo make this consistence across multiple file system
                 "name": parent.name,
                 "path": str(parent),
                 "children": self.parse(children),

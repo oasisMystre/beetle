@@ -139,7 +139,10 @@ def update(file: Path):
     data = Migration.load(file)
     cms_dir = Path(data["input"])
 
-    _transform(file, cms_dir)
+    file.write_text(
+        json.dumps(_transform(file, cms_dir), indent=1),
+        "utf-8",
+    )
 
 
 @migration.command("migration:deploy")
@@ -164,8 +167,8 @@ def deploy(file: Path, module: Optional[str]):
         click.echo("%s don't have a export class `Deploy`")
         return
 
-    klass = getattr(module, "Deploy")
-    _migration = Migration(file, klass)
+    klass = getattr(module, "Deployer")
+    _migration = Migration(file, klass())
     _migration.migrate()
 
     click.echo("Migration deployed successfully")

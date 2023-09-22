@@ -27,9 +27,14 @@ class Migration:
         """
         start migration
         """
-        return self._migrate(self.migration)
+        return self._migrate(self.migration, depth=0)
 
-    def _migrate(self, data: Optional[List[Dict[str, any]]], parent=None, depth=None):
+    def _migrate(
+        self,
+        data: Optional[List[Dict[str, any]]],
+        parent=None,
+        depth=None,
+    ):
         """
         parse migration data
         """
@@ -45,6 +50,8 @@ class Migration:
 
         # addition first before updates
         if additions:
+            print(len(additions))
+            indexes = []
             for addition in additions:
                 self.deploy.add(
                     depth=depth,
@@ -53,7 +60,11 @@ class Migration:
                     data=addition,
                 )
                 children.insert(addition["index"], addition)
-                additions.remove(addition)
+                indexes.append(addition)
+                del addition["index"]
+
+            for index in indexes:
+                additions.remove(index)
 
         if updates:
             # to prevent unwanted behavior while updating indexes
@@ -69,6 +80,7 @@ class Migration:
                 )
                 children[update["index"]] = update
                 indexes.append(update)
+                del update["index"]
                 del update["updateKeys"]
 
             for index in indexes:
@@ -106,7 +118,10 @@ class Migration:
         """
         parse migration data
         """
-        return self._migrate(self.migration, depth=0)
+        return self._migrate(
+            self.migration,
+            depth=0,
+        )
 
     def _commit(self):
         return self.commit(

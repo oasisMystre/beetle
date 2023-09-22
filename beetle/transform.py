@@ -23,6 +23,9 @@ SOFTWARE.
 """
 
 from copy import copy
+from pathlib import Path
+
+from beetle.utils import find_by, is_object
 
 
 class Transform:
@@ -44,18 +47,13 @@ class Transform:
         result = copy(old)
 
         for key, value in old.items():
-            if (
-                key in new
-                and value != new[key]
-                and not isinstance(value, (dict, tuple, list))
-            ):
+            if key in new and value != new[key] and not is_object(value):
                 result[key] = new[key]
                 mutated.append(key)
 
         for key, value in new.items():
-            if key not in old and not isinstance(value, (dict, tuple, list)):
+            if key not in old and not is_object(value):
                 result[key] = new[key]
-                mutated.append(key)
 
         return mutated, result
 
@@ -74,42 +72,36 @@ class Transform:
         deletions = []
 
         for index, child in enumerate(new_children):
-            old_child = list(
-                filter(
-                    lambda x: x["id"] == child.get("id"),
-                    old_children,
-                )
-            )
-            is_exist = len(old_child) > 0
+            old_child = find_by(old_children, child, "id")
 
-            if not is_exist:
+            if not old_child:
                 value = copy(child)
                 value["index"] = index
+
                 additions.append(value)
 
-            if is_exist:
-                child["index"] = index
-
-                mutated, value = self.concat(old_child[0], child)
+            if old_child:
+                mutated, value = self.concat(old_child, child)
+                value["index"] = index
 
                 if len(mutated) > 0:
                     value["updateKeys"] = mutated
                     updates.append(value)
 
-            if len(old_child) > 0 and "children" in child:
-                self.transform(old_child[0], child)
+                if "children" in child:
+                    self.transform(old_child, child)
 
+        # new node children has higher priority
+        # when an item from old not found in new node then it is deleted from old node
         for index, child in enumerate(old_children):
-            new_child = list(
-                filter(
-                    lambda x: x["id"] == child.get("id"),
-                    new_children,
-                )
-            )
+            new_child = find_by(new_children, child, "id")
 
-            if len(new_child) == 0:
+            if not new_child:
                 # sure this makes removing child when migrating easier
                 deletions.append(child)
+
+            # if new_child and "children" in child:
+            #     self.transform(old_child, child)
 
         old_node["deletes"] = deletions
         old_node["updates"] = updates

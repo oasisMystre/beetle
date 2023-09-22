@@ -106,6 +106,9 @@ class Deployer(Deploy):
                 ...
 ```
 
+> depth is based on sub directories 
+> if depth is does not correlate with how your data is structured use recursion or implement your own logic
+
 ## Format
 
 Add numbering to front of your file or folder name if you care about how your cms is structured
